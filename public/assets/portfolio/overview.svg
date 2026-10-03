@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1080">
+    <defs><pattern id="grid" width="72" height="72" patternUnits="userSpaceOnUse"><path d="M72 0H0V72" fill="none" stroke="#ffffff" stroke-opacity=".06"/></pattern></defs>
+    <rect width="1440" height="1080" fill="#151515"/><rect width="1440" height="1080" fill="url(#grid)"/>
+    <g font-family="Arial,Helvetica,sans-serif" fill="#f5f2ed"><text x="80" y="92" font-size="22" letter-spacing="5">ADVVVVAITH / SELECTED WORK</text>
+    <text x="80" y="225" font-size="86" letter-spacing="-5">AI. Capital. Science.</text><text x="83" y="285" font-size="24" fill="#a6a6a0">ADVAITH VAITHIANATHAN / BENGALURU, INDIA</text><g font-size="44"><text x="80" y="465">01 / BUILD SYSTEMS</text><text x="80" y="625">02 / ASK BETTER QUESTIONS</text><text x="80" y="785">03 / TURN RESEARCH INTO SOFTWARE</text></g><g fill="none" stroke="#f84b30" stroke-width="6"><circle cx="1210" cy="610" r="110"/><path d="M1055 610H1365M1210 455V765"/></g>
+    <path d="M80 975H1360" stroke="#ffffff" stroke-opacity=".2"/><text x="80" y="1025" font-size="20" fill="#a6a6a0">EXPERIMENTS BECOME SYSTEMS.</text>
+    <circle cx="1330" cy="1017" r="13" fill="#f84b30"/></g></svg>

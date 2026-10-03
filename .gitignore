@@ -1,0 +1,13 @@
+node_modules/
+dist/
+artifacts/
+design-qa.md
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.openai/legacy-portfolio.html
+.openai/redesign-backup/
