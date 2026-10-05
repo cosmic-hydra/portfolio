@@ -1,0 +1,173 @@
+.soul-enhanced-work .soul-work-viewport {
+  position: relative;
+  isolation: isolate;
+  background: #171a1c;
+  border-radius: 2px;
+  box-shadow: 0 12px 48px #00000016;
+}
+
+.soul-enhanced-work .soul-work-viewport > .case-content_image {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.soul-work-study {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  overflow: hidden;
+  color: #f0efe9;
+  text-align: left;
+  container-type: inline-size;
+}
+
+.soul-work-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.soul-work-eyebrow,
+.soul-work-note,
+.soul-work-hint {
+  position: absolute;
+  font-family: "Courier New", monospace;
+  font-weight: 400;
+  font-size: clamp(8px, 1.7cqw, 11px);
+  line-height: 1.25;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.soul-work-eyebrow {
+  left: 6%;
+  top: 5%;
+  color: var(--soul-work-accent);
+}
+
+.soul-work-art-title {
+  position: absolute;
+  left: 6%;
+  top: 11%;
+  font-family: inherit;
+  font-size: clamp(25px, 6.1cqw, 49px);
+  font-weight: 500;
+  letter-spacing: -.045em;
+  line-height: .99;
+  pointer-events: none;
+}
+
+.soul-work-title-line { display: block; }
+
+.soul-work-art-title .soul-work-title-line:nth-child(2) {
+  color: var(--soul-work-accent);
+}
+
+.soul-work-caption {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 8%;
+  padding-top: 2.7%;
+  border-top: 1px solid #ffffff22;
+  color: #eeeee8;
+  font-size: clamp(10px, 2.05cqw, 15px);
+  font-weight: 400;
+  letter-spacing: -.01em;
+  line-height: 1.3;
+}
+
+.soul-work-note {
+  left: 6%;
+  bottom: 3.7%;
+  color: #bcc2bc;
+  font-size: clamp(7px, 1.25cqw, 9px);
+  letter-spacing: .03em;
+}
+
+.soul-work-hint {
+  right: 6%;
+  top: 5%;
+  opacity: .45;
+  font-size: clamp(7px, 1.45cqw, 10px);
+  transition: opacity .25s ease;
+}
+
+.soul-enhanced-work .case-content_guts:hover .soul-work-hint,
+.soul-enhanced-work .case-content_guts:focus-visible .soul-work-hint { opacity: 1; }
+
+.soul-enhanced-work .soul-work-role {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin-bottom: 1.2rem;
+  padding: .5rem 0;
+  border-bottom: 1px solid currentColor;
+  font-family: "Courier New", monospace;
+  font-size: clamp(9px, .8vw, 12px);
+  line-height: 1.45;
+  font-weight: 400;
+  letter-spacing: .025em;
+  text-transform: uppercase;
+}
+
+.soul-enhanced-work .case-content_left {
+  min-width: 0;
+}
+
+.soul-enhanced-work .case-content_left > .u-copy {
+  margin-top: 0;
+  margin-bottom: auto;
+}
+
+.soul-enhanced-work .case-content_link {
+  margin-top: 2rem;
+}
+
+.soul-enhanced-work .case-content_guts:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 8px;
+}
+
+#services .soul-focus-row {
+  transition: background-color .4s ease, border-color .4s ease;
+}
+
+#services .soul-focus-row::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--soul-focus-color) 10%, transparent), transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .4s ease;
+}
+
+#services .soul-focus-row .accordion-sub { transition: color .3s ease; }
+#services .soul-focus-row:hover::before,
+#services .soul-focus-row:focus-within::before { opacity: 1; }
+#services .soul-focus-row:hover .accordion-sub,
+#services .soul-focus-row:focus-within .accordion-sub { color: var(--soul-focus-color); }
+
+@media (max-width: 767px) {
+  .soul-enhanced-work .soul-work-role {
+    font-size: 9px;
+    margin-bottom: 0;
+  }
+  .soul-enhanced-work .case-content_left > .u-copy { margin-bottom: 0; }
+  .soul-enhanced-work .case-content_link { margin-top: 0; }
+  .soul-work-hint { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .soul-work-hint,
+  #services .soul-focus-row,
+  #services .soul-focus-row::before,
+  #services .soul-focus-row .accordion-sub { transition: none; }
+}

@@ -246,3 +246,5 @@ markup=str(s)
 markup=markup.replace('viewbox=', 'viewBox=').replace('<clippath ', '<clipPath ').replace('</clippath>', '</clipPath>')
 (root / 'src/portfolio.html').write_text(markup)
 print('Personalized all sections, brand, portraits, project media and contact links.')
+import runpy
+runpy.run_path(str(root / 'scripts/enrich-portfolio.py'))['enrich'](root)
