@@ -1,30 +1,61 @@
-import { useCallback, useEffect, useRef } from "react";
-import portfolioPageUrl from "./portfolio.html?url";
-import { initSoulPortfolio } from "./soul.js";
+import { useCallback, useEffect, useState } from 'react';
+import { Contact } from './components/Contact.jsx';
+import { Cursor } from './components/Cursor.jsx';
+import { Hedge } from './components/Hedge.jsx';
+import { Hero } from './components/Hero.jsx';
+import { Loader } from './components/Loader.jsx';
+import { Manifesto } from './components/Manifesto.jsx';
+import { Nav } from './components/Nav.jsx';
+import { PixelEdge } from './components/PixelEdge.jsx';
+import { Research } from './components/Research.jsx';
+import { Trajectory } from './components/Trajectory.jsx';
+import { Work } from './components/Work.jsx';
+import { ScrollTrigger, lockScroll, reducedMotion, startSmoothScroll } from './lib/motion.js';
 
 export function App() {
-  const frameRef = useRef(null);
-  const cleanupRef = useRef(null);
-  const enhanceFrame = useCallback(() => {
-    const frame = frameRef.current;
-    if (!frame?.contentDocument || frame.contentDocument.readyState !== 'complete') return;
-    cleanupRef.current?.();
-    cleanupRef.current = initSoulPortfolio(frame.contentDocument, frame.contentWindow);
-  }, []);
+  const [ready, setReady] = useState(false);
+
   useEffect(() => {
-    enhanceFrame();
-    return () => cleanupRef.current?.();
-  }, [enhanceFrame]);
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    window.scrollTo(0, 0);
+    const stop = startSmoothScroll();
+    // The loader unlocks scrolling when it finishes (immediately under reduced motion).
+    if (!reducedMotion()) lockScroll(true);
+    const refresh = () => ScrollTrigger.refresh();
+    document.fonts?.ready.then(refresh);
+    window.addEventListener('load', refresh);
+    return () => {
+      stop();
+      window.removeEventListener('load', refresh);
+    };
+  }, []);
+
+  const onIntroDone = useCallback(() => {
+    setReady(true);
+    lockScroll(false);
+  }, []);
+
   return (
-    <main className="mirror-shell">
-      <iframe
-        className="mirror-frame"
-        ref={frameRef}
-        onLoad={enhanceFrame}
-        src={portfolioPageUrl}
-        title="advvvvaith — Advaith Vaithianathan's portfolio"
-        allow="autoplay; fullscreen; picture-in-picture"
-      />
-    </main>
+    <>
+      <a className="skip" href="#manifesto">
+        Skip to content
+      </a>
+      <Loader onDone={onIntroDone} />
+      <Nav />
+      <main className={ready ? 'is-ready' : ''}>
+        <Hero ready={ready} />
+        <Manifesto />
+        <PixelEdge from="paper" to="ink" seed={3} />
+        <Hedge />
+        <PixelEdge from="ink" to="orange" seed={8} />
+        <Research />
+        <Work />
+        <PixelEdge from="paper" to="ink" seed={13} />
+        <Trajectory />
+      </main>
+      <Contact />
+      <Cursor />
+      <div className="grain" aria-hidden="true" />
+    </>
   );
 }

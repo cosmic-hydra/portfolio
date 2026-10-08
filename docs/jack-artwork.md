@@ -1,6 +1,6 @@
 # Jack of Hearts artwork
 
-Final asset: `public/assets/portfolio/jack-of-all-trades-v2.png` (1024 × 1536).
+Master: `assets-src/jack-of-all-trades-v2.png` (1024 × 1536). Removed from the site on 2026-10-08 at the owner’s request; kept here for reference.
 
 Created with the built-in image generation tool. The final card uses a traditional generic illustrated Jack. The owner explicitly requested that his face not appear on the cards. No likeness of Advaith is present in the final asset.
 
