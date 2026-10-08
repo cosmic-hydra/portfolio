@@ -85,7 +85,7 @@ export function Trajectory() {
             <h2 className="display" id="traj-title">
               trajectory<span className="accent">.</span>
             </h2>
-            <p>
+            <p data-lines>
               From national rocketry and astronomy competitions to research papers, a Palantir
               fellowship and frontier models for finance. The milestones, in order.
             </p>

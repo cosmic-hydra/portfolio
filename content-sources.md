@@ -21,7 +21,9 @@ Forage certificates are labelled as job simulations and grouped into one timelin
 
 ## Graphics
 
-All graphics are original: the pixel hedge, the tail-risk chart and project art are generated in code and are conceptual illustrations, not model output, results or scientific observations. The tail-risk chart is labelled as an illustration.
+All graphics are original: the pixel hedge, the tail-risk chart and project art are generated in code and are conceptual illustrations, not model output, results or scientific observations. The tail-risk chart is labelled as an illustration; its VaR/CVaR readouts are computed from that illustrative distribution.
+
+The "inside fx-1" grid uses only the published parameter counts: 1,536 cells of about 2.2B parameters each make 3.4T; about 4% (fx-1) and 2% (fx-1 lite) light up per token. The figure caption states that which cells activate is illustrative and not the real architecture.
 
 The Jack of Hearts card was removed from the site at the owner's request on 2026-10-08. Its master artwork and notes remain in `assets-src/` and [docs/jack-artwork.md](docs/jack-artwork.md).
 

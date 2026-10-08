@@ -1,9 +1,10 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { profile } from '../content.js';
 import { ScrollTrigger, fitCanvas, gsap, reducedMotion, rng, scrollToTarget } from '../lib/motion.js';
 import { Arrow, ExtLink } from './ui.jsx';
 
 const PORTRAIT_RATIO = 1233 / 1276;
+const finePointer = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 const MOBILE = 760;
 
 // Scales the name so it spans the full width of the stage, Kalkbrenner style.
@@ -59,6 +60,30 @@ export function Hero({ ready }) {
   const slotRef = useRef(null);
   const portraitRef = useRef(null);
   const pixelsRef = useRef(null);
+  const expandedRef = useRef(false);
+
+  // Once the portrait is full size, it and the claim drift gently against the pointer.
+  useEffect(() => {
+    if (reducedMotion() || !finePointer()) return undefined;
+    const stage = stageRef.current;
+    const img = stage.querySelector('.hero__img');
+    const claim = stage.querySelector('.hero__claim');
+    const ix = gsap.quickTo(img, 'xPercent', { duration: 1.2, ease: 'power3.out' });
+    const iy = gsap.quickTo(img, 'yPercent', { duration: 1.2, ease: 'power3.out' });
+    const cx = gsap.quickTo(claim, 'x', { duration: 1.2, ease: 'power3.out' });
+    const cy = gsap.quickTo(claim, 'y', { duration: 1.2, ease: 'power3.out' });
+    const onMove = (e) => {
+      const on = expandedRef.current;
+      const nx = on ? e.clientX / window.innerWidth - 0.5 : 0;
+      const ny = on ? e.clientY / window.innerHeight - 0.5 : 0;
+      ix(nx * -2.4);
+      iy(ny * -1.6);
+      cx(nx * 22);
+      cy(ny * 14);
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    return () => window.removeEventListener('pointermove', onMove);
+  }, []);
 
   useLayoutEffect(() => {
     const stage = stageRef.current;
@@ -121,6 +146,9 @@ export function Hero({ ready }) {
           scrub: 0.5,
           pin: true,
           invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            expandedRef.current = self.progress > 0.97;
+          },
         },
       });
       tl.fromTo('.hero__meta', { autoAlpha: 1, y: 0 }, { autoAlpha: 0, y: 40, duration: 0.25 }, 0)

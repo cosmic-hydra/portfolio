@@ -1,8 +1,9 @@
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { SplitText } from 'gsap/SplitText';
 import Lenis from 'lenis';
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, SplitText);
 
 export { gsap, ScrollTrigger };
 
@@ -74,12 +75,37 @@ export function whileVisible(el, draw) {
 }
 
 // Sizes a canvas to its CSS box at device pixel ratio; returns CSS width/height.
-export function fitCanvas(canvas, maxDpr = 2) {
+// Pass with2d = false for canvases that will hold a WebGL context instead.
+export function fitCanvas(canvas, maxDpr = 2, with2d = true) {
   const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
   const { width, height } = canvas.getBoundingClientRect();
   canvas.width = Math.max(1, Math.round(width * dpr));
   canvas.height = Math.max(1, Math.round(height * dpr));
+  if (!with2d) return { ctx: null, width, height, dpr };
   const ctx = canvas.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return { ctx, width, height, dpr };
+}
+
+// Paragraphs marked data-lines rise in line by line from behind a mask. SplitText
+// re-splits on resize and rebuilds the animation through onSplit.
+export function revealLines(root = document) {
+  if (reducedMotion()) return () => {};
+  const splits = [...root.querySelectorAll('[data-lines]')].map((el) =>
+    SplitText.create(el, {
+      type: 'lines',
+      mask: 'lines',
+      autoSplit: true,
+      linesClass: 'split-line',
+      onSplit: (self) =>
+        gsap.from(self.lines, {
+          yPercent: 110,
+          duration: 1.1,
+          stagger: 0.07,
+          ease: 'expo.out',
+          scrollTrigger: { trigger: el, start: 'top 88%', once: true },
+        }),
+    }),
+  );
+  return () => splits.forEach((s) => s.revert());
 }

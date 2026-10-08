@@ -11,11 +11,15 @@ The user asked for an "insanely good" redesign inspired by paulkalkbrenner.net, 
 - Type: Inter Tight (grotesk), Archivo at `font-stretch: 62%` (condensed display), JetBrains Mono (labels). All self-hosted via Fontsource.
 - Hero: full name fitted edge to edge with the portrait inline; scrolling zooms the portrait to full height. The real portrait appears in the hero (and the share image) only.
 - artificial hedge is the first and largest chapter: marquee, generative pixel "hedge" canvas, the fx series (fx-1, fx-1 lite, dipcatcher) with specs as published on artificialhedge.co, and the source → reasoning → output flow.
-- Section order: hero, principle, artificial hedge, research, selected work, trajectory, contact.
+- Section order: hero, principle, artificial hedge (stage → inside fx-1 → fx series → flow → links), research, selected work, trajectory, contact.
 
 ## Professional pass (2026-10-08)
 
 The user asked to **remove the Jack of all trades section** and make the site more professional with more effects. The Jack card and the record table were removed; dated milestones now live in a pinned, horizontally scrolling `Trajectory` section (vertical on phones). Copy is restrained and businesslike: no playful headlines, labels numbered nº 001–006. Effects: custom square cursor with contextual labels and magnetic buttons (fine pointers only), decoding section labels, letter-roll link hovers, model-card spotlight, scroll-filled architecture diagram, velocity skew on project names, nav progress bar and active section, film grain, pixel reveal on the hero portrait. Do not reintroduce the Jack card unless asked; if it ever returns, never put his face on it.
+
+## Interactive pass (2026-10-08)
+
+Asked to "give it your best shot", the site gained: a WebGL pixel hedge (`hedgeGL.js`: wind sway, pointer repulsion, click ripple; 2D fallback), a pinned "inside fx-1" scene (`Anatomy.jsx`) that visualises the published 3.4T / ~128B and 2.4T / ~49B specs as a cell grid with per-token activation (proportions are real, routing is illustrative and labelled so), an interactive VaR/CVaR chart with a confidence slider, a ⌘K / Ctrl K / "/" command palette, SplitText line reveals on `[data-lines]` paragraphs, a pixel cursor trail on dark sections, a nav fade backdrop and gentle pointer parallax on the expanded hero portrait. A magnifying/pixelating lens over the portrait was tried and removed: effects that distort his face read as censorship or are unflattering.
 
 ## Code
 

@@ -6,11 +6,12 @@ import { Hero } from './components/Hero.jsx';
 import { Loader } from './components/Loader.jsx';
 import { Manifesto } from './components/Manifesto.jsx';
 import { Nav } from './components/Nav.jsx';
+import { Palette } from './components/Palette.jsx';
 import { PixelEdge } from './components/PixelEdge.jsx';
 import { Research } from './components/Research.jsx';
 import { Trajectory } from './components/Trajectory.jsx';
 import { Work } from './components/Work.jsx';
-import { ScrollTrigger, lockScroll, reducedMotion, startSmoothScroll } from './lib/motion.js';
+import { ScrollTrigger, lockScroll, reducedMotion, revealLines, startSmoothScroll } from './lib/motion.js';
 
 export function App() {
   const [ready, setReady] = useState(false);
@@ -22,9 +23,18 @@ export function App() {
     // The loader unlocks scrolling when it finishes (immediately under reduced motion).
     if (!reducedMotion()) lockScroll(true);
     const refresh = () => ScrollTrigger.refresh();
-    document.fonts?.ready.then(refresh);
+    let unsplit = () => {};
+    let alive = true;
+    // Lines must be measured with the final fonts, so split after they load.
+    (document.fonts?.ready ?? Promise.resolve()).then(() => {
+      if (!alive) return;
+      unsplit = revealLines();
+      refresh();
+    });
     window.addEventListener('load', refresh);
     return () => {
+      alive = false;
+      unsplit();
       stop();
       window.removeEventListener('load', refresh);
     };
@@ -54,6 +64,7 @@ export function App() {
         <Trajectory />
       </main>
       <Contact />
+      <Palette />
       <Cursor />
       <div className="grain" aria-hidden="true" />
     </>

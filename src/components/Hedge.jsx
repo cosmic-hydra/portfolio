@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { hedge, profile } from '../content.js';
 import { gsap, reducedMotion } from '../lib/motion.js';
+import { Anatomy } from './Anatomy.jsx';
 import { Marquee } from './Marquee.jsx';
 import { PixelHedge } from './PixelHedge.jsx';
 import { Arrow, ExtLink, Roll, Scramble, Words } from './ui.jsx';
@@ -159,10 +160,12 @@ export function Hedge() {
         <span className="hedge__fig label label--dim" aria-hidden="true">fig. 02 — a hedge, grown pixel by pixel</span>
       </div>
 
+      <Anatomy />
+
       <div className="hedge__models">
         <div className="hedge__models-head">
           <h3 className="display-sm">the fx series.</h3>
-          <p>
+          <p data-lines>
             Two models, two ways in: frontier depth, or the same finance and maths focus tuned for
             cost. A harness is on the way.
           </p>

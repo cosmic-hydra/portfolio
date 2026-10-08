@@ -65,7 +65,7 @@ export function Manifesto() {
       </h2>
 
       <div className="manifesto__foot">
-        <p className="manifesto__note">
+        <p className="manifesto__note" data-lines>
           The work has spanned AI, capital, astronomy, molecular science and climate. The method
           stays the same: find the edge of what is possible, then build at it. Today that means
           frontier models for finance.

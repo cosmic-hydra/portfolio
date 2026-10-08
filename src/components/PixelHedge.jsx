@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { fitCanvas, reducedMotion, rng, whileVisible } from '../lib/motion.js';
+import { createHedgeGL } from './hedgeGL.js';
 
 const PALETTE = ['#ff571a', '#ff571a', '#e9480f', '#c93c0b', '#ff7a45', '#a8320a'];
 const SPARK = ['#ffd5c2', '#ffb08a', '#fff3ec'];
@@ -73,119 +74,116 @@ function growHedge(cols, rows, seed, mobile) {
   return { cells, born, maxT };
 }
 
+// Renders the hedge with WebGL when available (wind, cursor repulsion, click ripples),
+// falling back to a simpler 2D canvas.
 export function PixelHedge({ className = '', seed = 11 }) {
   const ref = useRef(null);
 
   useEffect(() => {
     const canvas = ref.current;
+    const host = canvas.parentElement;
     const still = reducedMotion();
     let state = null;
-    let pointer = { x: -1e4, y: -1e4 };
+    let renderer = null;
     let start = 0;
-    let base = null;
+    const pointer = { x: -1e4, y: -1e4, tx: -1e4, ty: -1e4, force: 0, inside: false };
+    const pulse = { x: -1e4, y: -1e4, t: -100 };
 
     const setup = () => {
-      const fit = fitCanvas(canvas);
-      const mobile = fit.width < 760;
+      const { width, height, dpr } = fitCanvas(canvas, 2, false);
+      // Skip transient zero or runaway sizes (e.g. mid-resize) rather than allocating for them.
+      if (!width || !height || width * height > 16e6) return;
+      const mobile = width < 760;
       const cell = mobile ? 6 : 7;
-      const cols = Math.ceil(fit.width / cell);
-      const rows = Math.ceil(fit.height / cell);
-      state = { ...fit, cell, cols, rows, ...growHedge(cols, rows, seed, mobile) };
-      base = null;
-      if (still) paint(Infinity);
+      const cols = Math.ceil(width / cell);
+      const rows = Math.ceil(height / cell);
+      state = { width, height, dpr, cell, cols, rows, ...growHedge(cols, rows, seed, mobile) };
+      if (!renderer) renderer = createHedgeGL(canvas) ?? create2D(canvas);
+      renderer.load(state);
     };
 
-    const drawCells = (ctx, upto, cell, now) => {
-      const { cells } = state;
-      const size = cell - 1;
-      for (let i = 0; i < cells.length; i++) {
-        const c = cells[i];
-        if (c.t > upto) break;
-        const fresh = upto - c.t < 5;
-        ctx.globalAlpha = fresh ? 1 : c.alpha;
-        ctx.fillStyle = fresh ? '#fff1ea' : c.color;
-        ctx.fillRect(c.x * cell, c.y * cell, size, size);
-      }
-      ctx.globalAlpha = 1;
-    };
-
-    const paint = (now) => {
-      if (!state) return;
-      const { ctx, width, height, cell, maxT, cells } = state;
+    const frame = (now) => {
+      if (!state || !renderer) return;
       if (!start) start = now;
       const p = still ? 1 : Math.min(1, (now - start) / GROW_MS);
-      const upto = (1 - Math.pow(1 - p, 2.2)) * (maxT + 6);
-
-      if (p < 1 || !base) {
-        ctx.clearRect(0, 0, width, height);
-        drawCells(ctx, upto, cell, now);
-        if (p >= 1) {
-          base = document.createElement('canvas');
-          base.width = canvas.width;
-          base.height = canvas.height;
-          base.getContext('2d').drawImage(canvas, 0, 0);
-        }
-        return;
-      }
-
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(base, 0, 0);
-      ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
-
-      // Twinkle a handful of cells.
-      const size = cell - 1;
-      const n = Math.min(160, cells.length);
-      const seedT = Math.floor(now / 90);
-      for (let k = 0; k < n; k++) {
-        const c = cells[(seedT * 7919 + k * 104729) % cells.length];
-        ctx.globalAlpha = 0.5 + 0.5 * Math.sin(now / 240 + k);
-        ctx.fillStyle = k % 3 ? '#ffb08a' : '#0b0b0b';
-        ctx.fillRect(c.x * cell, c.y * cell, size, size);
-      }
-
-      // Light up the cells around the pointer.
-      const { born, cols, rows } = state;
-      const R = 13;
-      const px = Math.round(pointer.x / cell);
-      const py = Math.round(pointer.y / cell);
-      for (let y = Math.max(0, py - R); y <= Math.min(rows - 1, py + R); y++) {
-        for (let x = Math.max(0, px - R); x <= Math.min(cols - 1, px + R); x++) {
-          const d = Math.hypot(x - px, y - py) / R;
-          if (d > 1) continue;
-          const lit = born[y * cols + x] !== Infinity;
-          if (!lit && (x + y + seedT) % 9) continue;
-          ctx.globalAlpha = (1 - d) * (lit ? 1 : 0.35);
-          ctx.fillStyle = lit ? '#fff1ea' : '#ff571a';
-          ctx.fillRect(x * cell, y * cell, size, size);
-        }
-      }
-      ctx.globalAlpha = 1;
+      const grow = (1 - Math.pow(1 - p, 2.2)) * (state.maxT + 6);
+      pointer.force += ((pointer.inside ? 1 : 0) - pointer.force) * 0.08;
+      pointer.x += (pointer.tx - pointer.x) * 0.2;
+      pointer.y += (pointer.ty - pointer.y) * 0.2;
+      renderer.draw({ grow, time: still ? 0 : now / 1000, pointer, pulse });
     };
 
     setup();
     const ro = new ResizeObserver(() => {
       setup();
-      start = start ? performance.now() - GROW_MS : 0;
+      if (start) start = performance.now() - GROW_MS;
+      if (still) frame(performance.now());
     });
     ro.observe(canvas);
-    const onMove = (e) => {
+
+    const local = (e) => {
       const r = canvas.getBoundingClientRect();
-      pointer = { x: e.clientX - r.left, y: e.clientY - r.top };
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
     };
-    const onLeave = () => (pointer = { x: -1e4, y: -1e4 });
-    const host = canvas.parentElement;
+    const onMove = (e) => {
+      const { x, y } = local(e);
+      if (!pointer.inside) {
+        pointer.x = x;
+        pointer.y = y;
+      }
+      pointer.tx = x;
+      pointer.ty = y;
+      pointer.inside = true;
+    };
+    const onLeave = () => (pointer.inside = false);
+    const onDown = (e) => {
+      if (e.target.closest('a, button')) return;
+      const { x, y } = local(e);
+      Object.assign(pulse, { x, y, t: performance.now() / 1000 });
+    };
     host.addEventListener('pointermove', onMove);
     host.addEventListener('pointerleave', onLeave);
-    const stop = still ? () => {} : whileVisible(canvas, paint);
+    host.addEventListener('pointerdown', onDown);
+    const stop = still ? (frame(performance.now()), () => {}) : whileVisible(canvas, frame);
 
     return () => {
       ro.disconnect();
       stop();
+      renderer?.dispose();
       host.removeEventListener('pointermove', onMove);
       host.removeEventListener('pointerleave', onLeave);
+      host.removeEventListener('pointerdown', onDown);
     };
   }, [seed]);
 
   return <canvas ref={ref} className={`pixel-hedge ${className}`} aria-hidden="true" />;
+}
+
+// Fallback renderer: the same hedge, drawn cell by cell, lit around the pointer.
+function create2D(canvas) {
+  let s = null;
+  return {
+    load(state) {
+      s = state;
+    },
+    draw({ grow, pointer }) {
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(s.dpr, 0, 0, s.dpr, 0, 0);
+      ctx.clearRect(0, 0, s.width, s.height);
+      const size = s.cell - 1;
+      const R = s.cell * 16;
+      for (const c of s.cells) {
+        if (c.t > grow) break;
+        const cx = c.x * s.cell;
+        const cy = c.y * s.cell;
+        const d = Math.hypot(cx - pointer.x, cy - pointer.y);
+        const lit = d < R ? (1 - d / R) * pointer.force : 0;
+        ctx.globalAlpha = Math.max(c.alpha, lit);
+        ctx.fillStyle = lit > 0.4 || grow - c.t < 5 ? '#fff1ea' : c.color;
+        ctx.fillRect(cx, cy, size, size);
+      }
+      ctx.globalAlpha = 1;
+    },
+    dispose() {},
+  };
 }

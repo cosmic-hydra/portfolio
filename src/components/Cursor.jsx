@@ -9,6 +9,7 @@ const INTERACTIVE = 'a, button, [data-cursor]';
 export function Cursor() {
   const dotRef = useRef(null);
   const ringRef = useRef(null);
+  const trailRef = useRef(null);
   const [enabled] = useState(
     () =>
       typeof window !== 'undefined' &&
@@ -29,8 +30,55 @@ export function Cursor() {
     const ry = gsap.quickTo(ring, 'y', { duration: 0.4, ease: 'power3.out' });
 
     let magnet = null;
+    let last = null;
+    const trail = trailRef.current;
+    const tctx = trail.getContext('2d');
+    let cells = [];
+    let trailRaf = 0;
+    const GRID = 16;
+    const LIFE = 620;
+
+    const sizeTrail = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      trail.width = window.innerWidth * dpr;
+      trail.height = window.innerHeight * dpr;
+      tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    sizeTrail();
+    window.addEventListener('resize', sizeTrail);
+
+    // On dark sections the pointer leaves a short-lived trail of grid-snapped pixels.
+    const paintTrail = (now) => {
+      tctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      cells = cells.filter((c) => now - c.t < LIFE);
+      for (const c of cells) {
+        const a = 1 - (now - c.t) / LIFE;
+        tctx.fillStyle = `rgba(255,87,26,${(0.55 * a).toFixed(3)})`;
+        const inset = (1 - a) * GRID * 0.35;
+        tctx.fillRect(c.x + inset, c.y + inset, GRID - 2 - inset * 2, GRID - 2 - inset * 2);
+      }
+      trailRaf = cells.length ? requestAnimationFrame(paintTrail) : 0;
+    };
+    const addTrail = (x, y) => {
+      const now = performance.now();
+      const steps = last ? Math.ceil(Math.hypot(x - last.x, y - last.y) / (GRID / 2)) : 1;
+      for (let i = 1; i <= steps; i++) {
+        const px = last ? last.x + ((x - last.x) * i) / steps : x;
+        const py = last ? last.y + ((y - last.y) * i) / steps : y;
+        const gx = Math.floor(px / GRID) * GRID;
+        const gy = Math.floor(py / GRID) * GRID;
+        const existing = cells.find((c) => c.x === gx && c.y === gy);
+        if (existing) existing.t = now;
+        else cells.push({ x: gx, y: gy, t: now });
+      }
+      if (!trailRaf) trailRaf = requestAnimationFrame(paintTrail);
+    };
 
     const onMove = (e) => {
+      if (ring.dataset.on === 'ink' && !ring.classList.contains('is-hover')) {
+        addTrail(e.clientX, e.clientY);
+      }
+      last = { x: e.clientX, y: e.clientY };
       dx(e.clientX);
       dy(e.clientY);
       rx(e.clientX);
@@ -77,6 +125,8 @@ export function Cursor() {
     window.addEventListener('pointerdown', onDown);
     window.addEventListener('pointerup', onUp);
     return () => {
+      cancelAnimationFrame(trailRaf);
+      window.removeEventListener('resize', sizeTrail);
       root.classList.remove('has-cursor');
       window.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerover', onOver);
@@ -89,6 +139,7 @@ export function Cursor() {
   if (!enabled) return null;
   return (
     <>
+      <canvas className="cursor-trail" ref={trailRef} aria-hidden="true" />
       <div className="cursor-ring" ref={ringRef} aria-hidden="true" />
       <div className="cursor-dot" ref={dotRef} aria-hidden="true" />
     </>

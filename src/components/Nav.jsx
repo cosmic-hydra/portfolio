@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { nav, profile } from '../content.js';
 import { ScrollTrigger, gsap, lockScroll, scrollToTarget } from '../lib/motion.js';
 import { useBengaluruTime } from '../lib/time.js';
+import { openPalette, paletteKey } from './Palette.jsx';
 import { Arrow, ExtLink, Roll } from './ui.jsx';
 
 // Tracks which section sits under the nav so its colour can contrast with it.
@@ -84,10 +85,15 @@ export function Nav() {
             </a>
           ))}
         </nav>
-        <span className="nav__time" aria-label={`Local time in Bengaluru: ${time}`}>
-          <span className="nav__pulse" aria-hidden="true" />
-          blr {time}
-        </span>
+        <div className="nav__right">
+          <button type="button" className="nav__cmd" onClick={openPalette} aria-label="Open command menu">
+            <span aria-hidden="true">{paletteKey}</span>
+          </button>
+          <span className="nav__time" aria-label={`Local time in Bengaluru: ${time}`}>
+            <span className="nav__pulse" aria-hidden="true" />
+            blr {time}
+          </span>
+        </div>
         <button
           className="nav__menu"
           type="button"

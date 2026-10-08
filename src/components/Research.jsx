@@ -5,9 +5,15 @@ import { Arrow, ExtLink, SectionHead } from './ui.jsx';
 
 const BINS = 34;
 const LEVELS = 16;
-const TAIL = 7;
+const CELL = 10;
+const GAP = 2;
+const RANGE = [-10, 6];
+const ALPHA_MIN = 0.8;
+const ALPHA_MAX = 0.995;
 
-// A skewed return distribution drawn in pixel stacks, its left tail filled in.
+const binReturn = (i) => RANGE[0] + ((i + 0.5) * (RANGE[1] - RANGE[0])) / BINS;
+
+// A skewed return distribution drawn in pixel stacks.
 function useDistribution() {
   return useMemo(() => {
     const rand = rng(21);
@@ -24,38 +30,101 @@ function useDistribution() {
   }, []);
 }
 
+// VaR is the loss at the (1 − α) quantile; CVaR is the average loss beyond it.
+function riskAt(heights, alpha) {
+  const total = heights.reduce((a, b) => a + b, 0);
+  const target = (1 - alpha) * total;
+  let cum = 0;
+  let k = 0;
+  for (; k < BINS - 1; k++) {
+    cum += heights[k];
+    if (cum >= target) break;
+  }
+  let weight = 0;
+  let sum = 0;
+  for (let i = 0; i <= k; i++) {
+    weight += heights[i];
+    sum += heights[i] * binReturn(i);
+  }
+  return { k, valueAtRisk: -binReturn(k), cvar: -sum / weight, total };
+}
+
 function TailChart() {
   const heights = useDistribution();
-  const cell = 10;
-  const gap = 2;
-  const w = BINS * cell;
-  const h = LEVELS * cell;
+  const [alpha, setAlpha] = useState(0.95);
+  const svgRef = useRef(null);
+  const { k, valueAtRisk, cvar, total } = riskAt(heights, alpha);
+  const w = BINS * CELL;
+  const h = LEVELS * CELL;
+
+  // Dragging across the chart moves the VaR line to the bin under the pointer.
+  const fromPointer = (e) => {
+    const r = svgRef.current.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * (w + 4) - 2;
+    const i = Math.min(BINS - 1, Math.max(0, Math.floor(x / CELL)));
+    const cum = heights.slice(0, i + 1).reduce((a, b) => a + b, 0);
+    setAlpha(Math.min(ALPHA_MAX, Math.max(ALPHA_MIN, 1 - (cum - 0.5) / total)));
+  };
+
+  const pct = (v) => `${v.toFixed(1)}%`;
   return (
     <figure className="tail">
-      <svg viewBox={`-2 -26 ${w + 4} ${h + 52}`} role="img" aria-labelledby="tail-cap">
+      <svg
+        ref={svgRef}
+        viewBox={`-2 -26 ${w + 4} ${h + 52}`}
+        role="img"
+        aria-label={`Illustrative return distribution. At ${pct(alpha * 100)} confidence, VaR is ${pct(valueAtRisk)} and CVaR is ${pct(cvar)}.`}
+        data-cursor="drag"
+        onPointerDown={(e) => {
+          e.currentTarget.setPointerCapture(e.pointerId);
+          fromPointer(e);
+        }}
+        onPointerMove={(e) => e.buttons === 1 && fromPointer(e)}
+      >
         {heights.map((n, i) =>
           Array.from({ length: n }, (_, j) => (
             <rect
               key={`${i}-${j}`}
-              className={`tail__px ${i < TAIL ? 'is-tail' : ''}`}
-              x={i * cell}
-              y={h - (j + 1) * cell}
-              width={cell - gap}
-              height={cell - gap}
+              className={`tail__px ${i <= k ? 'is-tail' : ''}`}
+              x={i * CELL}
+              y={h - (j + 1) * CELL}
+              width={CELL - GAP}
+              height={CELL - GAP}
               style={{ '--d': `${(i * 0.018 + j * 0.03).toFixed(3)}s` }}
             />
           )),
         )}
-        <line className="tail__var" x1={TAIL * cell - gap / 2} x2={TAIL * cell - gap / 2} y1={-18} y2={h + 6} />
-        <text className="tail__txt" x={TAIL * cell + 4} y={-10}>
-          VaR 95
-        </text>
+        <g className="tail__marker" style={{ transform: `translateX(${(k + 1) * CELL - GAP / 2}px)` }}>
+          <line className="tail__var" x1={0} x2={0} y1={-18} y2={h + 6} />
+          <text className="tail__txt" x={4} y={-10}>
+            VaR {(alpha * 100).toFixed(1)}
+          </text>
+        </g>
         <text className="tail__txt" x={0} y={h + 20}>
           ← CVaR: the mean of what’s left
         </text>
       </svg>
-      <figcaption id="tail-cap" className="label">
-        fig. 03 — tail risk, illustrated. A sketch of the idea, not a result.
+
+      <div className="tail__readout">
+        <label className="tail__slider">
+          <span className="label">confidence level</span>
+          <input
+            type="range"
+            min={ALPHA_MIN * 100}
+            max={ALPHA_MAX * 100}
+            step="0.5"
+            value={(alpha * 100).toFixed(1)}
+            onChange={(e) => setAlpha(Number(e.target.value) / 100)}
+          />
+        </label>
+        <div className="tail__stats" aria-live="polite">
+          <span><i className="label">α</i>{pct(alpha * 100)}</span>
+          <span><i className="label">VaR</i>{pct(valueAtRisk)}</span>
+          <span><i className="label">CVaR</i>{pct(cvar)}</span>
+        </div>
+      </div>
+      <figcaption className="label">
+        fig. 03 — drag the chart or the slider. An illustrative distribution, not a result.
       </figcaption>
     </figure>
   );
