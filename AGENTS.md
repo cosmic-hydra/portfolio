@@ -28,3 +28,5 @@ React + Vite. `src/App.jsx` composes sections from `src/components/`; content li
 Run the local server yourself and open the preview in the browser available to this environment. Do not give the user server-start instructions when you can run it. When the user gives durable design feedback, preferences or decisions, record them here.
 
 Keep `.openai/hosting.json`, `worker/index.js`, `scripts/prepare-sites-build.mjs` and `tests/sites-worker.test.mjs` intact so the same site can be handed to Sites. Before a Sites handoff, run `npm run build` and `npm run test:sites`; the build must leave `dist/client/index.html`, `dist/server/index.js` and `dist/.openai/hosting.json`.
+
+On 2026-10-14 the user asked for a temporary coming soon layer and explicitly said **do not delete or move the portfolio code**. The layer is `src/ComingSoon.jsx` + `src/coming-soon.css`, switched by the `COMING_SOON` constant in `src/main.jsx`; set it to `false` to restore the portfolio.
