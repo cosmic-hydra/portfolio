@@ -22,6 +22,7 @@ The build produces the website in `dist/client/` and the optional Sites worker i
 - `src/App.jsx` composes the page from `src/components/`.
 - `src/content.js` holds every fact and link; sources are documented in `content-sources.md`.
 - `src/lib/motion.js` sets up GSAP ScrollTrigger and Lenis smooth scrolling.
+- `middleware.js` blocks visitors at Kristal Campus on Vercel; its settings are at the top of the file.
 - `public/media/` holds the optimised portrait, Jack card and share image; full-size masters live in `assets-src/`.
 
 ## Vercel
